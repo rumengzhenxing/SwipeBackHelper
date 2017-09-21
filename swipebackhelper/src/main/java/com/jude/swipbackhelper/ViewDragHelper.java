@@ -162,6 +162,7 @@ public class ViewDragHelper {
      * and draggability of child views.
      */
     public static abstract class Callback {
+
         /**
          * Called when the drag state changes. See the <code>STATE_*</code>
          * constants for more information.
@@ -356,6 +357,8 @@ public class ViewDragHelper {
         public int clampViewPositionVertical(View child, int top, int dy) {
             return 0;
         }
+
+        public abstract boolean isPageTranslucent();
     }
 
     /**
@@ -1369,6 +1372,8 @@ public class ViewDragHelper {
             dispatchViewReleased(xvel, yvel);
     }
 
+
+
     private void dragTo(int left, int top, int dx, int dy) {
         int clampedX = left;
         int clampedY = top;
@@ -1376,7 +1381,10 @@ public class ViewDragHelper {
         final int oldTop = mCapturedView.getTop();
         if (dx != 0) {
             clampedX = mCallback.clampViewPositionHorizontal(mCapturedView, left, dx);
-            mCapturedView.offsetLeftAndRight(clampedX - oldLeft);
+            //增加是否透明的判断
+            if (mCallback.isPageTranslucent()) {
+                mCapturedView.offsetLeftAndRight(clampedX - oldLeft);
+            }
         }
         if (dy != 0) {
             clampedY = mCallback.clampViewPositionVertical(mCapturedView, top, dy);
@@ -1386,8 +1394,10 @@ public class ViewDragHelper {
         if (dx != 0 || dy != 0) {
             final int clampedDx = clampedX - oldLeft;
             final int clampedDy = clampedY - oldTop;
-            mCallback
-                    .onViewPositionChanged(mCapturedView, clampedX, clampedY, clampedDx, clampedDy);
+            //增加是否透明的判断
+            if (mCallback.isPageTranslucent()) {
+                mCallback.onViewPositionChanged(mCapturedView, clampedX, clampedY, clampedDx, clampedDy);
+            }
         }
     }
 

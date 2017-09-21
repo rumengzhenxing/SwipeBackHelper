@@ -7,13 +7,10 @@
         <item name="colorAccent">@color/Orange</item>
 
         <item name="android:windowIsTranslucent">true</item>
-        <item name="android:windowAnimationStyle">@style/SlideRightAnimation</item>
-    </style>
-    <style name="AppTheme" parent="AppTheme.Base"></style>
-    <style name="MainTheme" parent="AppTheme">
-        <item name="android:windowIsTranslucent">false</item>
+        <item name="android:windowAnimationStyle">@style/BaseSlideAnimation</item>
     </style>
 
+    <style name="AppTheme" parent="AppTheme.Base"></style>
 
 
 </resources>

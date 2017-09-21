@@ -48,6 +48,10 @@ public class SwipeBackPage {
         return this;
     }
 
+    public void setPageTranslucent(boolean pageTranslucent) {
+        mSwipeBackLayout.setPageTranslucent(pageTranslucent);
+    }
+
     //是否可滑动关闭
     public SwipeBackPage setSwipeBackEnable(boolean enable) {
         mEnable = enable;

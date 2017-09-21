@@ -81,7 +81,10 @@ public class SwipeBackLayout extends FrameLayout {
 
     private boolean mInLayout;
 
+    private boolean pageTranslucent = true;
+
     private Rect mTmpRect = new Rect();
+
 
     /**
      * Edge being dragged
@@ -109,6 +112,15 @@ public class SwipeBackLayout extends FrameLayout {
         mDragHelper.setMaxVelocity(minVel * 2f);
         mDragHelper.setSensitivity(context, 0.3f);
         mDragHelper.setEdgeTrackingEnabled(ViewDragHelper.EDGE_LEFT);
+    }
+
+    public void setPageTranslucent(boolean pageTranslucent) {
+        this.pageTranslucent = pageTranslucent;
+    }
+
+
+    public boolean isPageTranslucent() {
+        return pageTranslucent;
     }
 
     /**
@@ -201,7 +213,6 @@ public class SwipeBackLayout extends FrameLayout {
     }
 
 
-
     /**
      * Set scroll threshold, we will close the activity, when scrollPercent over
      * this value
@@ -239,7 +250,7 @@ public class SwipeBackLayout extends FrameLayout {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
-        if (!mEnable||mDisallowIntercept) {
+        if (!mEnable || mDisallowIntercept) {
             return false;
         }
         try {
@@ -292,7 +303,10 @@ public class SwipeBackLayout extends FrameLayout {
         boolean ret = super.drawChild(canvas, child, drawingTime);
         if (mScrimOpacity > 0 && drawContent
                 && mDragHelper.getViewDragState() != ViewDragHelper.STATE_IDLE) {
+            // 画侧边阴影
             drawShadow(canvas, child);
+            // 画覆盖在可见的下层Activity区域之上的灰色半透明蒙层
+            // 将这句代码注释掉，就是像微信一样只要侧边一点阴影的效果
             drawScrim(canvas, child);
         }
         return ret;
@@ -317,7 +331,7 @@ public class SwipeBackLayout extends FrameLayout {
     }
 
     public void attachToActivity(Activity activity) {
-        if (getParent()!=null){
+        if (getParent() != null) {
             return;
         }
         mActivity = activity;
@@ -328,8 +342,8 @@ public class SwipeBackLayout extends FrameLayout {
         a.recycle();
 
         ViewGroup decor = (ViewGroup) activity.getWindow().getDecorView();
-        View decorChild  = decor.findViewById(android.R.id.content);
-        while (decorChild.getParent() != decor){
+        View decorChild = decor.findViewById(android.R.id.content);
+        while (decorChild.getParent() != decor) {
             decorChild = (View) decorChild.getParent();
         }
         decorChild.setBackgroundResource(background);
@@ -339,8 +353,8 @@ public class SwipeBackLayout extends FrameLayout {
         decor.addView(this);
     }
 
-    public void removeFromActivity(Activity activity){
-        if (getParent()==null)return;
+    public void removeFromActivity(Activity activity) {
+        if (getParent() == null) return;
         ViewGroup decorChild = (ViewGroup) getChildAt(0);
         ViewGroup decor = (ViewGroup) activity.getWindow().getDecorView();
         decor.removeView(this);
@@ -358,6 +372,22 @@ public class SwipeBackLayout extends FrameLayout {
 
     private class ViewDragCallback extends ViewDragHelper.Callback {
         private boolean mIsScrollOverValid;
+
+        public boolean isPageTranslucent() {
+            return SwipeBackLayout.this.isPageTranslucent();
+        }
+
+        @Override
+        public void onEdgeDragStarted(int edgeFlags, int pointerId) {
+            super.onEdgeDragStarted(edgeFlags, pointerId);
+
+            Utils.convertActivityToTranslucent(mActivity, new Utils.PageTranslucentListener() {
+                @Override
+                public void onPageTranslucent() {
+                    setPageTranslucent(true);
+                }
+            });
+        }
 
         @Override
         public boolean tryCaptureView(View view, int i) {
@@ -399,7 +429,7 @@ public class SwipeBackLayout extends FrameLayout {
                 }
             }
             if (mScrollPercent >= 1) {
-                if (!mActivity.isFinishing()){
+                if (!mActivity.isFinishing()) {
                     if (mListeners != null && !mListeners.isEmpty()
                             && mScrollPercent >= mScrollThreshold && mIsScrollOverValid) {
                         mIsScrollOverValid = false;
@@ -410,8 +440,6 @@ public class SwipeBackLayout extends FrameLayout {
                     mActivity.finish();
                 }
             }
-
-
         }
 
         @Override
@@ -423,9 +451,16 @@ public class SwipeBackLayout extends FrameLayout {
             left = xvel > 0 || xvel == 0 && mScrollPercent > mScrollThreshold ? childWidth
                     + mShadowLeft.getIntrinsicWidth() + OVERSCROLL_DISTANCE : 0;
 
-
-            mDragHelper.settleCapturedViewAt(left, top);
-            invalidate();
+            if (isPageTranslucent()) {
+                // 当前page背景是透明时，释放手指后才可以滑动
+                mDragHelper.settleCapturedViewAt(left, top);
+                invalidate();
+            } else {
+                if (left > 0 && !mActivity.isFinishing()) {
+                    mActivity.finish();
+                    mActivity.overridePendingTransition(0, R.anim.slide_out_right);
+                }
+            }
         }
 
         @Override

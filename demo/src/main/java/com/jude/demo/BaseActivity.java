@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 
 import com.jude.swipbackhelper.SwipeBackHelper;
+import com.jude.swipbackhelper.Utils;
 
 /**
  * Created by Mr.Jude on 2015/9/7.
@@ -13,12 +14,13 @@ public class BaseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        boolean opaque = Utils.convertActivityFromTranslucent(this);
         SwipeBackHelper.onCreate(this);
         SwipeBackHelper.getCurrentPage(this)
                 .setSwipeBackEnable(true)
-                .setSwipeSensitivity(0.5f)
                 .setSwipeRelateEnable(true)
-                .setSwipeRelateOffset(300);
+                .setPageTranslucent(!opaque);
         //ViewServer.get(this).addWindow(this);
 
     }
@@ -40,9 +42,6 @@ public class BaseActivity extends AppCompatActivity {
         super.onResume();
         //ViewServer.get(this).setFocusedWindow(this);
     }
-
-
-
 
 
 }
